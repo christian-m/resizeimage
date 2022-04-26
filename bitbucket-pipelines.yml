@@ -1,0 +1,60 @@
+image: golang:1.16
+pipelines:
+  default:
+    - step:
+        name: Test
+        script:
+          - make test
+  branches:
+    main:
+      - step:
+          name: Test
+          script:
+            - make test
+      - step:
+          name: Build CLI Tools
+          script:
+            - apt-get update && apt-get install -y zip
+            - make all
+          artifacts:
+            - build/cli/**
+      - step:
+          name: Build Lambda
+          script:
+            - apt-get update && apt-get install -y zip
+            - make lambda
+          artifacts:
+            - build/lambda/**
+      - step:
+          name: Update Lambda Code Dev
+          script:
+            - pipe: atlassian/aws-lambda-deploy:0.2.1
+              variables:
+                AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+                AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+                AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
+                FUNCTION_NAME: 'dev-resizeimages3'
+                COMMAND: 'update'
+                ZIP_FILE: 'build/lambda/resizeimages3.zip'
+      - parallel:
+          - step:
+              name: Deploy CLI Tools
+              trigger: manual
+              script:
+                - pipe: atlassian/bitbucket-upload-file:0.3.2
+                  variables:
+                    BITBUCKET_USERNAME: $BITBUCKET_USERNAME
+                    BITBUCKET_APP_PASSWORD: $BITBUCKET_APP_PASSWORD
+                    FILENAME: 'build/cli/*'
+          - step:
+              name: Update Lambda Code Prod
+              trigger: manual
+              script:
+                - pipe: atlassian/aws-lambda-deploy:0.2.1
+                  variables:
+                    AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+                    AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+                    AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
+                    FUNCTION_NAME: 'resizeimages3'
+                    COMMAND: 'update'
+                    ZIP_FILE: 'build/lambda/resizeimages3.zip'
