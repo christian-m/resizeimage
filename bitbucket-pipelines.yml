@@ -6,7 +6,13 @@ pipelines:
         script:
           - make test
   branches:
-    main:
+    default:
+      - step:
+          name: Security Scan
+          script:
+            # Run a security scan for sensitive data.
+            # See more security tools at https://bitbucket.org/product/features/pipelines/integrations?&category=security
+            - pipe: atlassian/git-secrets-scan:0.6.1
       - step:
           name: Test
           script:
