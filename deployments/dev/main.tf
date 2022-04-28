@@ -53,7 +53,7 @@ module "media_bucket" {
 }
 
 module "lambda_function" {
-  source                = "git::git@bitbucket.org:christian_m/aws_lambda_deploy_bucket.git?ref=v1.0"
+  source                = "git::git@bitbucket.org:christian_m/aws_lambda_deploy_bucket.git?ref=v1.0.1"
   environment           = var.environment
   repo_bucket           = local.repo_name
   lambda_name           = local.lambda_name
@@ -70,7 +70,7 @@ module "lambda_function" {
 }
 
 module "http_api" {
-  source                     = "git::git@bitbucket.org:christian_m/aws_lambda_api_gateway_http.git?ref=v1.2"
+  source                     = "git::git@bitbucket.org:christian_m/aws_lambda_api_gateway_http.git?ref=v1.2.1"
   environment                = var.environment
   lambda_name                = local.lambda_name
   lambda_function_invoke_arn = module.lambda_function.lambda_function_invoke_arn
